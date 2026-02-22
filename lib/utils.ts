@@ -31,6 +31,11 @@ export function generateWhatsAppLink(phone: string, message: string): string {
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`
 }
 
+/** Share link: opens WhatsApp with message pre-filled, user chooses recipient */
+export function generateWhatsAppShareLink(message: string): string {
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`
+}
+
 export function getInitials(name: string): string {
   return name
     .split(' ')

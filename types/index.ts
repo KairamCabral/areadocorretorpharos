@@ -122,6 +122,26 @@ export interface Simulacao {
   updated_at: string
 }
 
+export interface SimulacaoCenario {
+  id: string
+  simulacao_id: string
+  mes_venda: number
+  label: string | null
+  valor_imovel_momento: number | null
+  total_investido: number | null
+  total_investido_corrigido: number | null
+  custos_venda: number | null
+  lucro_bruto: number | null
+  ir_devido: number | null
+  lucro_liquido: number | null
+  rentabilidade_percentual: number | null
+  rentabilidade_anualizada: number | null
+  rendimento_selic: number | null
+  rendimento_cdb: number | null
+  rendimento_lci: number | null
+  created_at: string
+}
+
 // ============================================================
 // Open House
 // ============================================================

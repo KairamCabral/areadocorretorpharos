@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { Avaliacao, AvaliacaoComparavel } from '@/types'
-
 export function useAvaliacao(avaliacaoId?: string) {
   const [loading, setLoading] = useState(false)
   const [buscandoIA, setBuscandoIA] = useState(false)
@@ -27,24 +25,24 @@ export function useAvaliacao(avaliacaoId?: string) {
     }
   }
 
-  const salvarAvaliacao = async (avaliacao: Partial<Avaliacao>) => {
+  const salvarAvaliacao = async (avaliacao: Record<string, unknown>) => {
     setLoading(true)
     try {
       if (avaliacaoId) {
-        const { data, error } = await supabase
-          .from('avaliacoes')
+        const { data, error } = await (supabase
+          .from('avaliacoes') as any)
           .update({ ...avaliacao, updated_at: new Date().toISOString() })
           .eq('id', avaliacaoId)
           .select()
           .single()
-        return { data, error }
+        return { data: data as { id: string } & Record<string, unknown> | null, error }
       } else {
-        const { data, error } = await supabase
-          .from('avaliacoes')
+        const { data, error } = await (supabase
+          .from('avaliacoes') as any)
           .insert(avaliacao)
           .select()
           .single()
-        return { data, error }
+        return { data: data as { id: string } & Record<string, unknown> | null, error }
       }
     } finally {
       setLoading(false)
@@ -52,18 +50,18 @@ export function useAvaliacao(avaliacaoId?: string) {
   }
 
   const salvarComparaveis = async (
-    avaliacaoId: string,
-    comparaveis: Partial<AvaliacaoComparavel>[]
+    avaliacaoIdParam: string,
+    comparaveis: Record<string, unknown>[]
   ) => {
-    // Remove existentes e insere novos
     await supabase
       .from('avaliacao_comparaveis')
       .delete()
-      .eq('avaliacao_id', avaliacaoId)
+      .eq('avaliacao_id', avaliacaoIdParam)
 
-    const { data, error } = await supabase
-      .from('avaliacao_comparaveis')
-      .insert(comparaveis.map((c) => ({ ...c, avaliacao_id: avaliacaoId })))
+    const rows = comparaveis.map((c) => ({ ...c, avaliacao_id: avaliacaoIdParam }))
+    const { data, error } = await (supabase
+      .from('avaliacao_comparaveis') as any)
+      .insert(rows)
       .select()
 
     return { data, error }

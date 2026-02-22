@@ -1,5 +1,15 @@
 import Link from 'next/link'
-import { Home, Calculator, DoorOpen, GraduationCap, ExternalLink, Trophy } from 'lucide-react'
+import { createServerSupabase } from '@/lib/supabase/server'
+import { getTotalPontos } from '@/lib/gamificacao'
+import {
+  Home,
+  Calculator,
+  DoorOpen,
+  GraduationCap,
+  ExternalLink,
+  Trophy,
+} from 'lucide-react'
+import type { LinkUtil } from '@/types'
 
 const ferramentas = [
   { href: '/ferramentas/avaliacao', icon: Home, label: 'Avaliação de Imóvel', desc: 'Análise comparativa com IA', color: 'bg-blue-500' },
@@ -8,12 +18,48 @@ const ferramentas = [
   { href: '/treinamento', icon: GraduationCap, label: 'Treinamento', desc: 'Cursos e certificações', color: 'bg-amber-500' },
 ]
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createServerSupabase()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const [profileRes, totalPontos, avaliacoesCount, simulacoesCount, aulasCount, linksRes] =
+    await Promise.all([
+      supabase.from('profiles').select('nome').eq('id', user.id).single(),
+      getTotalPontos(supabase as any, user.id),
+      supabase
+        .from('avaliacoes')
+        .select('*', { count: 'exact', head: true })
+        .eq('corretor_id', user.id),
+      supabase
+        .from('simulacoes')
+        .select('*', { count: 'exact', head: true })
+        .eq('corretor_id', user.id),
+      supabase
+        .from('treinamento_progresso')
+        .select('*', { count: 'exact', head: true })
+        .eq('corretor_id', user.id)
+        .eq('concluida', true),
+      supabase
+        .from('links_uteis')
+        .select('*')
+        .eq('ativo', true)
+        .order('ordem', { ascending: true })
+        .limit(5),
+    ])
+
+  const nome = (profileRes.data as { nome?: string } | null)?.nome ?? 'Corretor'
+  const primeiroNome = nome.split(' ')[0] ?? nome
+  const avaliacoes = avaliacoesCount.count ?? 0
+  const simulacoes = simulacoesCount.count ?? 0
+  const aulas = aulasCount.count ?? 0
+  const quickLinks = (linksRes.data ?? []) as LinkUtil[]
+
   return (
     <div className="space-y-6">
-      {/* Greeting - server component, profile fetched server-side */}
+      {/* Greeting */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Olá! 👋</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Olá, {primeiroNome}! 👋</h1>
         <p className="text-gray-500">O que vamos fazer hoje?</p>
       </div>
 
@@ -43,16 +89,22 @@ export default function DashboardPage() {
           <Link href="/links" className="text-pharos-blue text-sm">Ver todos</Link>
         </div>
         <div className="flex gap-2 overflow-x-auto carousel-scroll pb-2">
-          {/* TODO: Fetch from Supabase */}
-          {['CRM', 'Drive', 'WhatsApp Web', 'ZAP Imóveis', 'VivaReal'].map((link) => (
-            <button
-              key={link}
-              className="flex-shrink-0 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-pharos-blue hover:text-pharos-blue transition"
-            >
-              <ExternalLink className="w-3.5 h-3.5 inline mr-1.5" />
-              {link}
-            </button>
-          ))}
+          {quickLinks.length === 0 ? (
+            <span className="text-sm text-gray-500">Nenhum link disponível</span>
+          ) : (
+            quickLinks.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-pharos-blue hover:text-pharos-blue transition inline-flex items-center gap-1.5 min-h-[48px]"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                {link.titulo}
+              </a>
+            ))
+          )}
         </div>
       </div>
 
@@ -62,13 +114,13 @@ export default function DashboardPage() {
           <Trophy className="w-8 h-8 text-pharos-gold" />
           <div>
             <p className="text-white/80 text-sm">Meu Progresso</p>
-            <p className="text-xl font-bold">0 pontos</p>
+            <p className="text-xl font-bold">{totalPontos} pontos</p>
           </div>
         </div>
         <div className="mt-3 flex gap-4 text-sm text-white/70">
-          <span>0 avaliações</span>
-          <span>0 simulações</span>
-          <span>0 aulas</span>
+          <span>{avaliacoes} avaliações</span>
+          <span>{simulacoes} simulações</span>
+          <span>{aulas} aulas</span>
         </div>
       </div>
     </div>

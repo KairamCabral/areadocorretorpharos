@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { gerarPromptBuscaComparaveis } from '@/lib/avaliacao-mca'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  const key = process.env.OPENAI_API_KEY
+  if (!key) throw new Error('OPENAI_API_KEY is required')
+  return new OpenAI({ apiKey: key })
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +19,7 @@ export async function POST(request: NextRequest) {
       infraLazer: body.infra_lazer || 'basico',
     })
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: 'Você é um avaliador imobiliário. Responda APENAS com JSON válido, sem markdown.' },

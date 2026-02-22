@@ -22,7 +22,7 @@ export function useAuth() {
           .select('*')
           .eq('id', user.id)
           .single()
-        setProfile(data as Profile)
+        setProfile(data as unknown as Profile | null)
       }
 
       setLoading(false)
@@ -39,7 +39,7 @@ export function useAuth() {
             .select('*')
             .eq('id', session.user.id)
             .single()
-          setProfile(data as Profile)
+          setProfile(data as unknown as Profile | null)
         } else {
           setProfile(null)
         }
