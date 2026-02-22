@@ -1,0 +1,12 @@
+# Pharos Corretor — Regras Cursor AI
+
+## Stack: Next.js 15 + Tailwind + shadcn/ui + Supabase + OpenAI
+## Mobile-first, corretores com baixa familiaridade tech
+## Cores: pharos-blue #1B4DDB, pharos-gold #C9A84C, pharos-dark #0F172A
+## IA: OpenAI API (gpt-4o), NÃO usar Claude API
+## Auth: Supabase native OTP (SMS/email), SEM Twilio
+## Treinamento: visual Netflix (fundo escuro, carrosséis, thumbnails)
+## Textos UI em pt-BR, formatação BR (R$, dd/mm/yyyy)
+## Mínimo 48px de toque em botões
+## Server Components por padrão, 'use client' quando necessário
+## Forms: react-hook-form + zod | Toast: sonner
